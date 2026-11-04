@@ -678,6 +678,14 @@ bool clip_tokenize(const clip_ctx * ctx, const char * text, struct clip_tokens *
     return true;
 }
 
+void clip_tokens_free(struct clip_tokens * tokens) {
+    if (tokens && tokens->data) {
+        delete[] tokens->data;
+        tokens->data = NULL;
+        tokens->size = 0;
+    }
+}
+
 clip_image_u8 * clip_image_u8_make() { return new clip_image_u8(); }
 
 clip_image_f32 * clip_image_f32_make() { return new clip_image_f32(); }
@@ -1550,8 +1558,10 @@ bool clip_compare_text_and_image(const clip_ctx * ctx, const int n_threads, cons
     }
 
     if (!clip_text_encode(ctx, n_threads, &tokens, txt_vec, true)) {
+		clip_tokens_free(&tokens);
         return false;
     }
+	clip_tokens_free(&tokens);
 
     // preprocess and encode image
     clip_image_f32 img_res;
@@ -1649,6 +1659,7 @@ bool clip_zero_shot_label_image(struct clip_ctx * ctx, const int n_threads, cons
         clip_tokens tokens;
         clip_tokenize(ctx, text, &tokens);
         clip_text_encode(ctx, n_threads, &tokens, txt_vec, false);
+        clip_tokens_free(&tokens);
         similarities[i] = clip_similarity_score(img_vec, txt_vec, vec_dim);
     }
 
